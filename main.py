@@ -54,6 +54,6 @@ with col2:
             summarized_text = summarize_text(input_text)
             st.text_area("generated impressions:", summarized_text)
             # Clear the input field
-            st.session_state.input_area = ""
+#            st.session_state.input_area = ""
         else:
             st.error("Please enter some text to generate impressions.")
