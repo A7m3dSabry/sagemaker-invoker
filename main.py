@@ -50,7 +50,7 @@ if csv_file:
     # Adjust the DataFrame display by truncating long results
     # Display the uploaded CSV file with status and results
     table_placeholder.write("CSV File Preview:")
-    table_placeholder.write(df, use_container_width=True)  # Use container width to fit the page width
+    table_placeholder.dataframe(df, use_container_width=True)  # Use container width to fit the page width
 
     # Placeholder for displaying updates
     status_placeholder = st.empty()
@@ -91,7 +91,7 @@ if csv_file:
                         # Clear and display the updated DataFrame
                         # table_placeholder.empty()
                         # table_placeholder.write("Updated CSV File:")
-                        table_placeholder.write(df, use_container_width=True)
+                        table_placeholder.dataframe(df, use_container_width=True)
 
             # Final update to DataFrame
             # st.write("Processed Results:")
