@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import time
 
-lambda_endpoint = "https://8t4pyjhqx0.execute-api.us-west-2.amazonaws.com/default/DEBI_InvokingSageMaker"
+lambda_endpoint = "https://gqtibwba90.execute-api.eu-central-1.amazonaws.com/default/DEBI_SageMaker_Invoker"
 
 def request_lambda(data):
     response = requests.post(lambda_endpoint, json={"text": data})
