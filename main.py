@@ -1,59 +1,73 @@
 import streamlit as st
 import requests
-import json
-from PIL import Image
-from io import BytesIO
+import pandas as pd
 
+lambda_endpoint = "https://8t4pyjhqx0.execute-api.us-west-2.amazonaws.com/default/DEBI_InvokingSageMaker"
 
-lambda_endpoint="https://8t4pyjhqx0.execute-api.us-west-2.amazonaws.com/default/DEBI_InvokingSageMaker"
 
 def request_lambda(data):
- return requests.post(lambda_endpoint,json =data).text
+    response = requests.post(lambda_endpoint, json={"text": data})
+    return response.text
 
-
-# from transformers import pipeline
-
-# Load a text summarization pipeline from Hugging Face Transformers
-# summarizer = pipeline("summarization")
 
 # Function to summarize text
 def summarize_text(text):
-    # summary = summarizer(text, max_length=50, min_length=25, do_sample=False)
-    # return summary[0]['summary_text']
     return request_lambda(text)
 
-# Function to fetch an image from an API
-def fetch_image(url="https://via.placeholder.com/300"):
-    response = requests.get(url)
-    if response.status_code == 200:
-        image = Image.open(BytesIO(response.content))
-        return image
-    else:
-        st.error("Failed to fetch image from the API.")
-        return None
+
 st.set_page_config(layout="wide")
 st.title("Automatic Radiology Impression Report Generator")
 
-# Create two columns
-col1, col2 = st.columns([1, 2])
+# Section for text input
+st.header("Finding")
+input_text = st.text_area("Enter Finding", key="input_area")
 
-with col1:
-    st.header("Scan Image")
-    image = fetch_image("https://th.bing.com/th/id/OIP.w-R4SATia_WHKevgHqFdBQHaJC?rs=1&pid=ImgDetMain")  # Replace the URL with the actual API endpoint
-    if image:
-        st.image(image, caption="Brain Scan Image from API", use_column_width=True)
+# Button to trigger summarization for text input
+if st.button("Generate Impressions", key="generate_btn"):
+    if input_text.strip():
+        summarized_text = summarize_text(input_text)
+        st.text_area("Generated Impressions:", summarized_text)
+    else:
+        st.error("Please enter some text to generate impressions.")
 
-with col2:
-    # Text input for summarization
-    st.header("Finding")
-    input_text = st.text_area("Enter Finding", key="input_area")
-    
-    # Button to trigger summarization
-    if st.button("generate impressions", key="generate_btn"):
-        if input_text.strip():
-            summarized_text = summarize_text(input_text)
-            st.text_area("generated impressions:", summarized_text)
-            # Clear the input field
-#            st.session_state.input_area = ""
+# Section for CSV file upload
+st.header("Upload CSV File")
+csv_file = st.file_uploader("Choose a CSV file", type="csv")
+
+if csv_file:
+    # Read CSV file
+    df = pd.read_csv(csv_file)
+
+    # Add columns for status and results if they do not exist
+    if 'Status' not in df.columns:
+        df['Status'] = 'Pending'
+    if 'Result' not in df.columns:
+        df['Result'] = 'Pending'
+
+    # Display the uploaded CSV file with status and results
+    st.write("CSV File Preview:")
+    st.write(df)
+
+    # Option to select a column from the CSV
+    column_name = st.selectbox("Select the column to process", df.columns)
+
+    # Button to process the CSV file
+    if st.button("Process CSV File"):
+        if column_name:
+            # Iterate over the rows of the DataFrame
+            for index, row in df.iterrows():
+                if df.at[index, 'Status'] == 'Pending':  # Process only pending rows
+                    data = row[column_name]
+                    df.at[index, 'Status'] = 'Processing'
+                    # Update the DataFrame to reflect the processing status
+                    st.write("Updating row status...")
+                    result = summarize_text(data)
+                    df.at[index, 'Result'] = result
+                    df.at[index, 'Status'] = 'Completed'
+
+            # Display the updated DataFrame
+            st.write("Processed Results:")
+            st.write(df)
         else:
-            st.error("Please enter some text to generate impressions.")
+            st.error("Please select a column to process.")
+
