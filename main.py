@@ -3,7 +3,6 @@ import requests
 import pandas as pd
 import time
 
-
 lambda_endpoint = "https://co9mxlsnsh.execute-api.eu-central-1.amazonaws.com/test/lambda"
 api_key = "bL3Rvn2EDw23vWYBGy3N16xRzyfHVJ7A1TIR9VtL"
 
@@ -27,8 +26,8 @@ def call_lambda_api(data):
         return f"Error: {e}"
 
 
-def summarize_text(text):
-    return call_lambda_api(text)
+def summarize_text(text, types):
+    return call_lambda_api({"findings": text, "types": types})
 
 
 st.set_page_config(layout="wide")
@@ -36,16 +35,16 @@ st.title("Automatic Radiology Impression Report Generator")
 
 tab1, tab2 = st.tabs(["Text Generation", "Batch Generation"])
 
-
 with tab1:
     # Section for text input
     st.header("Finding")
     input_text = st.text_area("Enter Finding", key="input_area")
 
     # Button to trigger summarization for text input
+    selected = st.selectbox('Make a selection:', ('CT', 'MR', 'Xray'))
     if st.button("Generate Impressions", key="generate_btn"):
         if input_text.strip():
-            summarized_text = summarize_text(input_text)
+            summarized_text = summarize_text(input_text, types=selected)
             st.text_area("Generated Impressions:", summarized_text)
         else:
             st.error("Please enter some text to generate impressions.")
@@ -91,6 +90,7 @@ with tab2:
                     for index, row in df.iterrows():
                         if df.at[index, 'Status'] == 'Pending':  # Process only pending rows
                             data = row[column_name]
+                            types = row["type"]
                             df.at[index, 'Status'] = 'Processing'
 
                             # Display the updated DataFrame
@@ -100,7 +100,7 @@ with tab2:
                             # Simulate some processing time
                             time.sleep(1)  # Adjust as needed for actual processing time
 
-                            result = summarize_text(data)
+                            result = summarize_text(data,types)
                             df.at[index, 'Result'] = result
                             df.at[index, 'Status'] = 'Completed'
 
