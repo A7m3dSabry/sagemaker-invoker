@@ -3,8 +3,8 @@ import requests
 import pandas as pd
 import time
 
-lambda_endpoint = "https://co9mxlsnsh.execute-api.eu-central-1.amazonaws.com/test/lambda"
-api_key = "bL3Rvn2EDw23vWYBGy3N16xRzyfHVJ7A1TIR9VtL"
+lambda_endpoint = st.secrets["LAMBDA_ENDPOINT"]
+api_key = st.secrets["API_KEY"]
 
 
 def call_lambda_api(data):
